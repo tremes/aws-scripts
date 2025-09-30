@@ -61,8 +61,13 @@ def get_dns_records(zone_id):
     route53 = boto3.client('route53')
 
     try:
-        response = route53.list_resource_record_sets(HostedZoneId=zone_id)
-        return response['ResourceRecordSets']
+        paginator = route53.get_paginator('list_resource_record_sets')
+        all_records = []
+
+        for page in paginator.paginate(HostedZoneId=zone_id):
+            all_records.extend(page['ResourceRecordSets'])
+
+        return all_records
     except ClientError as e:
         print(f"Error getting records for zone {zone_id}: {e}")
         return []
@@ -94,7 +99,6 @@ def main():
     # Get records for this zone
     records = get_dns_records(public_zone['Id'])
 
-    # TODO this needs a pagination
     print(f"Total number of DNS records is {len(records)}")
 
     for record in records:
