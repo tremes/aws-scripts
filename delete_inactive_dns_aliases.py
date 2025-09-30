@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 import boto3
+import sys
 from botocore.exceptions import ClientError
 
-def list_loadbalancers(region='us-east-1'):
+def list_loadbalancers(region):
     """Lists all the active AWS loadbalancerts in 
     the given region. Returns a dictionary when key is the DNS name 
     of the loadbalancer. """
@@ -73,12 +74,16 @@ def get_dns_records(zone_id):
         return []
 
 def main():
-    lb_map = list_loadbalancers()
+    if len(sys.argv) < 2:
+        print("Error: Please provide the AWS region as an argument")
+        sys.exit(1)
+
+    region = sys.argv[1]
+    lb_map = list_loadbalancers(region)
 
     # print("Active Load Balancers:")
     # for name, details in lb_map.items():
     #     print(f"  {name}: {details['type']} - {details['dns_name']}")
-
 
     # Get all public hosted zones
     zones = get_public_hosted_zones()
@@ -110,7 +115,7 @@ def main():
         dns_name = r["AliasTarget"]["DNSName"]
         dns_name = dns_name.removesuffix(".")
         # check if the DNS name is in the list of active loadbalancers
-        if lb_map.get(dns_name) is None:
+        if lb_map.get(dns_name) is None and region in dns_name:
             records_to_be_removed.append(r)
     
     print(f"{len(records_to_be_removed)} DNS records can be removed")
