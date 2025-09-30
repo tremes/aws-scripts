@@ -105,17 +105,15 @@ def main():
         if record["Type"] == "A":
             all_a_dns_records.append(record)
                 
-    number_of_records_to_remove = 0
     records_to_be_removed = []
     for r in all_a_dns_records:
         dns_name = r["AliasTarget"]["DNSName"]
         dns_name = dns_name.removesuffix(".")
         # check if the DNS name is in the list of active loadbalancers
         if lb_map.get(dns_name) is None:
-            number_of_records_to_remove = number_of_records_to_remove + 1 
             records_to_be_removed.append(r)
     
-    print(f"{number_of_records_to_remove} DNS records can be removed")
+    print(f"{len(records_to_be_removed)} DNS records can be removed")
     print()
     
     client = boto3.client('route53')
